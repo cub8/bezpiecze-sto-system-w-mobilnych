@@ -3,24 +3,31 @@ package com.example.secretlab.data
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import androidx.core.content.edit
 
 class SecureSessionStore(context: Context) {
     private val encryptedBox by lazy {
-        // TODO(C05-3): build a MasterKey and replace this starter configuration with EncryptedSharedPreferences.
-        // Use:
-        // MasterKey.Builder(context).setKeyScheme(MasterKey.KeyScheme.AES256_GCM).build()
-        // and EncryptedSharedPreferences.create(...)
-        context.getSharedPreferences(SECURE_CRATE, Context.MODE_PRIVATE)
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        EncryptedSharedPreferences.create(
+            context,
+            SECURE_CRATE,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
     }
 
     fun saveTravelCard(value: String) {
-        encryptedBox.edit().putString(SECURE_SLOT, value).apply()
+        encryptedBox.edit { putString(SECURE_SLOT, value) }
     }
 
     fun readTravelCard(): String? = encryptedBox.getString(SECURE_SLOT, null)
 
     fun clearTravelCard() {
-        encryptedBox.edit().remove(SECURE_SLOT).apply()
+        encryptedBox.edit { remove(SECURE_SLOT) }
     }
 
     companion object {
